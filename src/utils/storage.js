@@ -121,3 +121,42 @@ export function clearSyncedReportes() {
     console.error('[Storage] Error al limpiar reportes sincronizados:', error);
   }
 }
+
+/**
+ * Fusiona reportes remotos con los locales.
+ * - Si el ID ya existe localmente y está pendiente → se actualiza a sincronizado.
+ * - Si el ID no existe localmente → se agrega como sincronizado.
+ * - Reportes locales pendientes sin ID remoto → se conservan intactos.
+ * @param {Array} remoteList - Reportes recibidos del backend
+ */
+export function mergeRemoteReportes(remoteList) {
+  if (!Array.isArray(remoteList) || remoteList.length === 0) return;
+  try {
+    const local = getReportes();
+    const localMap = new Map(local.map((r) => [r.id, r]));
+
+    for (const remote of remoteList) {
+      if (!remote.id) continue;
+      if (localMap.has(remote.id)) {
+        // Si existe localmente y aún está pendiente, marcarlo como sincronizado
+        const existing = localMap.get(remote.id);
+        if (!existing.sincronizado) {
+          localMap.set(remote.id, {
+            ...existing,
+            sincronizado: true,
+            fechaSincronizacion: remote.fechaSincronizacion || new Date().toISOString(),
+          });
+        }
+      } else {
+        // No existe localmente → agregar con flag sincronizado
+        localMap.set(remote.id, { ...remote, sincronizado: true });
+      }
+    }
+
+    const merged = Array.from(localMap.values());
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    console.log(`[Storage] Merge remoto: ${merged.length} reportes en total`);
+  } catch (error) {
+    console.error('[Storage] Error al fusionar reportes remotos:', error);
+  }
+}

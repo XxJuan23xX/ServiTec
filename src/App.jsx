@@ -3,9 +3,9 @@ import Header from "./components/Header";
 import NetworkBanner from "./components/NetworkBanner";
 import ReporteForm from "./components/ReporteForm";
 import ReportesList from "./components/ReportesList";
-import { getReportes } from "./utils/storage";
+import { getReportes, mergeRemoteReportes } from "./utils/storage";
 import { useNetworkStatus } from "./utils/networkStatus";
-import { syncReportes } from "./utils/syncService";
+import { syncReportes, fetchRemoteReportes } from "./utils/syncService";
 
 function App() {
   const isOnline = useNetworkStatus();
@@ -33,15 +33,38 @@ function App() {
     setTimeout(() => setSyncStatus(null), 3000);
   }, []);
 
+  // Carga reportes del servidor y los fusiona con los locales
+  const loadFromServer = useCallback(async () => {
+    try {
+      const remote = await fetchRemoteReportes();
+      if (remote.length > 0) {
+        mergeRemoteReportes(remote);
+        setReportes(getReportes());
+        console.log("[App] Historial actualizado desde el servidor");
+      }
+    } catch {
+      // Sin conexión o servidor caído, no hacer nada
+    }
+  }, []);
+
   // Auto-sync cuando se recupera la conexión a internet
   useEffect(() => {
     const onOnline = () => {
       console.log("[App] Conexión recuperada, sincronizando reportes pendientes...");
       handleSync();
+      loadFromServer();
     };
     window.addEventListener("online", onOnline);
     return () => window.removeEventListener("online", onOnline);
-  }, [handleSync]);
+  }, [handleSync, loadFromServer]);
+
+  // Al montar: cargar datos del servidor si hay conexión (setTimeout para no disparar render síncrono)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadFromServer();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [loadFromServer]);
 
   // Verificar si hay reportes pendientes al detectar conexión
   useEffect(() => {

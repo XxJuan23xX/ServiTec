@@ -5,6 +5,22 @@
 
 import { getPendingReportes, markAsSynced, markManyAsSynced } from './storage';
 
+/**
+ * Obtiene todos los reportes desde el backend remoto.
+ * @returns {Promise<Array>} Lista de reportes del servidor, o [] si falla
+ */
+export async function fetchRemoteReportes() {
+  try {
+    const res = await fetch(`${API_URL}/reportes`);
+    if (!res.ok) return [];
+    const json = await res.json();
+    // El backend puede devolver { data: [...] } o directamente [...]
+    return Array.isArray(json.data) ? json.data : Array.isArray(json) ? json : [];
+  } catch {
+    return [];
+  }
+}
+
 const API_URL = import.meta.env.VITE_API_URL || 'https://servitec-yfwn.onrender.com/api';
 
 let isSyncInProgress = false;
