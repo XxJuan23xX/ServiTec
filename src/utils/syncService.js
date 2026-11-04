@@ -5,7 +5,7 @@
 
 import { getPendingReportes, markAsSynced, markManyAsSynced } from './storage';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://servitec-yfwn.onrender.com/api';
 
 let isSyncInProgress = false;
 

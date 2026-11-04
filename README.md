@@ -66,7 +66,8 @@ cd server
 npm run dev
 ```
 
-El servidor arranca en `http://localhost:3001`
+El servidor local arranca en `http://localhost:3001`
+Backend en producción: `https://servitec-yfwn.onrender.com`
 
 ### 3. Iniciar el Frontend (Terminal 2)
 

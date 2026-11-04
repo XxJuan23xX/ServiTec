@@ -55,7 +55,7 @@ self.addEventListener('fetch', (event) => {
   if (!request.url.startsWith('http')) return;
 
   // No cachear requests a la API del backend
-  if (request.url.includes('/api/')) return;
+  if (request.url.includes('/api/') || request.url.includes('servitec-yfwn.onrender.com')) return;
 
   event.respondWith(
     caches.open(CACHE_NAME).then(async (cache) => {
